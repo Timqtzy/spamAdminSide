@@ -37,9 +37,11 @@ const DisplayPage = () => {
     fetchCards();
   }, []);
 
+  const apiUrl = "https://spam-admin-side-y74w.vercel.app/";
+
   const fetchCards = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/cards", {
+      const { data } = await axios.get(`${apiUrl}api/cards`, {
         headers: getAuthHeader(),
       });
       setCards(data);
@@ -83,16 +85,12 @@ const DisplayPage = () => {
     );
 
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/cards",
-        form,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            ...getAuthHeader(),
-          },
-        }
-      );
+      const { data } = await axios.post(`${apiUrl}api/cards`, form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...getAuthHeader(),
+        },
+      });
       setCards([...cards, data]);
       toast.success("Blog added successfully!");
       setShowAddModal(false);
@@ -119,7 +117,7 @@ const DisplayPage = () => {
 
     try {
       const { data } = await axios.put(
-        `http://localhost:5000/api/cards/${editingCard._id}`,
+        `${apiUrl}api/cards/${editingCard._id}`,
         form,
         {
           headers: {
@@ -148,7 +146,7 @@ const DisplayPage = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/cards/${deleteCardId}`, {
+      await axios.delete(`${apiUrl}api/cards/${deleteCardId}`, {
         headers: getAuthHeader(),
       });
       setCards((prevCards) =>
