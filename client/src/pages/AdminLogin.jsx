@@ -20,13 +20,11 @@ const AdminLogin = ({ onLogin }) => {
     setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
+  const apiUrl = "https://spam-admin-side-y74w.vercel.app/";
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/login",
-        credentials
-      );
+      const { data } = await axios.post(`${apiUrl}api/login`, credentials);
 
       // Ensure the token is present in response
       if (!data.token) {
