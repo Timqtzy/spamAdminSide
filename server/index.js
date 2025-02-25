@@ -1,6 +1,4 @@
 require("dotenv").config();
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cloudinary = require("cloudinary").v2;
@@ -14,7 +12,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
-app.use(fileUpload({ useTempFiles: true }));
+app.use(fileUpload({ useTempFiles: false })); // Ensure no temp files on Vercel
 
 // Cloudinary Configuration
 cloudinary.config({
@@ -96,7 +94,6 @@ app.post("/api/login", async (req, res) => {
 // CRUD for Cards
 app.get("/api/cards", authenticate, async (req, res) => {
   try {
-    console.log(process.env.JWT_SECRET);
     const cards = await Card.find();
     res.json(cards);
   } catch (error) {
@@ -113,14 +110,16 @@ app.post("/api/cards", authenticate, async (req, res) => {
       return res.status(400).json({ error: "All fields are required." });
     }
 
+    // Generate a slug from the title
     const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "")
       .trim()
       .replace(/\s+/g, "-");
 
+    // Upload image directly to Cloudinary from memory
     const uploadResponse = await cloudinary.uploader.upload(
-      image.tempFilePath,
+      `data:${image.mimetype};base64,${image.data.toString("base64")}`,
       { folder: "cards" }
     );
 
@@ -131,12 +130,13 @@ app.post("/api/cards", authenticate, async (req, res) => {
       category,
       author,
       readTime,
-      image: uploadResponse.secure_url,
+      image: uploadResponse.secure_url, // Cloudinary URL
     });
 
     await newCard.save();
     res.json(newCard);
   } catch (error) {
+    console.error("Upload Error:", error);
     res.status(500).json({ error: "Failed to add card." });
   }
 });
@@ -149,7 +149,9 @@ app.put("/api/cards/:id", authenticate, async (req, res) => {
 
     if (req.files?.image) {
       const uploadResponse = await cloudinary.uploader.upload(
-        req.files.image.tempFilePath,
+        `data:${
+          req.files.image.mimetype
+        };base64,${req.files.image.data.toString("base64")}`,
         { folder: "cards" }
       );
       updateData.image = uploadResponse.secure_url;
@@ -178,7 +180,6 @@ app.put("/api/cards/:id", authenticate, async (req, res) => {
 app.delete("/api/cards/:id", authenticate, async (req, res) => {
   try {
     const deletedCard = await Card.findByIdAndDelete(req.params.id);
-
     if (!deletedCard) return res.status(404).json({ error: "Card not found." });
 
     res.json({ message: "Card deleted successfully." });
