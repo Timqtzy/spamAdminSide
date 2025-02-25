@@ -8,8 +8,7 @@ const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const fileUpload = require("express-fileupload");
-app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/" }));
+
 const app = express();
 
 // Middleware
@@ -110,37 +109,21 @@ app.post("/api/cards", authenticate, async (req, res) => {
     const { title, content, category, author, readTime } = req.body;
     const { image } = req.files || {};
 
-    // Validate required fields
     if (!title || !content || !category || !author || !readTime || !image) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
-    console.log("Uploaded Image: ", image); // Debugging
-
-    // Generate slug from title
     const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "")
       .trim()
       .replace(/\s+/g, "-");
 
-    // Upload image to Cloudinary
-    const uploadImage = async (image) => {
-      try {
-        return await cloudinary.uploader.upload(image.tempFilePath, {
-          folder: "cards",
-          timeout: 60000, // Set 60s timeout to avoid Vercel issues
-        });
-      } catch (error) {
-        console.error("Cloudinary Upload Error: ", error);
-        throw new Error("Image upload failed.");
-      }
-    };
+    const uploadResponse = await cloudinary.uploader.upload(
+      image.tempFilePath,
+      { folder: "cards" }
+    );
 
-    // Wait for image upload and get URL
-    const uploadResponse = await uploadImage(image);
-
-    // Create a new card
     const newCard = new Card({
       title,
       slug,
@@ -148,14 +131,12 @@ app.post("/api/cards", authenticate, async (req, res) => {
       category,
       author,
       readTime,
-      image: uploadResponse.secure_url, // Correctly assign the uploaded image URL
+      image: uploadResponse.secure_url,
     });
 
-    // Save to database
     await newCard.save();
-    res.status(201).json(newCard);
+    res.json(newCard);
   } catch (error) {
-    console.error("POST /api/cards Error: ", error);
     res.status(500).json({ error: "Failed to add card." });
   }
 });
