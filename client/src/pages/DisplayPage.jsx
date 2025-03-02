@@ -32,19 +32,30 @@ const DisplayPage = React.memo(() => {
   };
 
   useEffect(() => {
-    fetchCards();
+    fetchLimitedCards();
   }, []);
 
   const apiUrl = "https://spam-admin-side-y74w.vercel.app/";
 
-  const fetchCards = async () => {
+  const fetchLimitedCards = async (page) => {
     try {
-      const { data } = await axios.get(`${apiUrl}api/cards`, {
+      const { data } = await axios.get(`${apiUrl}api/cards?page=${page}`, {
         headers: getAuthHeader(),
       });
-      setCards(data);
+
+      if (data.length === 0) {
+        toast.info("No more cards to load.");
+        return; // Stop if no more data
+      }
+
+      setCards((prevCards) => {
+        const newCards = data.filter(
+          (newCard) => !prevCards.some((card) => card._id === newCard._id)
+        );
+        return [...prevCards, ...newCards];
+      });
     } catch (error) {
-      toast.error("Failed to load data. Please Log in again.");
+      toast.error("Failed to load data.");
     }
   };
 
