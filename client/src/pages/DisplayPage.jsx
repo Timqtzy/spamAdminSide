@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { FaPen, FaPlus, FaTrash } from "react-icons/fa6"; // Use 'FaPen' instead of 'FaEdit'
+
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -222,7 +223,7 @@ const DisplayPage = React.memo(() => {
                     onClick={() => handleEdit(card)}
                     className="flex items-center px-3 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors duration-200"
                   >
-                    <FaEdit className="mr-1" /> Edit
+                    <FaPen className="mr-1" /> Edit
                   </button>
                   <button
                     onClick={() => {
