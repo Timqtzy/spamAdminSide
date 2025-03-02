@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import axios from "axios";
-import { FaPen, FaPlus, FaTrash } from "react-icons/fa6"; // Use 'FaPen' instead of 'FaEdit'
-
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
 const DisplayPage = React.memo(() => {
   const [loadingState, setloadingState] = useState(false);
   const [cards, setCards] = useState([]);
@@ -20,6 +16,16 @@ const DisplayPage = React.memo(() => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteCardId, setDeleteCardId] = useState(null);
+
+  const FaPen = React.lazy(() =>
+    import("react-icons/fa6").then((m) => ({ default: m.FaPen }))
+  );
+  const FaPlus = React.lazy(() =>
+    import("react-icons/fa6").then((m) => ({ default: m.FaPlus }))
+  );
+  const FaTrash = React.lazy(() =>
+    import("react-icons/fa6").then((m) => ({ default: m.FaTrash }))
+  );
 
   const getAuthHeader = () => {
     const token = localStorage.getItem("adminToken");
@@ -190,7 +196,10 @@ const DisplayPage = React.memo(() => {
           onClick={() => setShowAddModal(true)}
           className="flex items-center p-4 bg-[#04AA6D] text-white rounded cursor-pointer hover:bg-[#04aa6dbd] transition-colors duration-200"
         >
-          <FaPlus className="mr-2" /> Add Blog
+          <Suspense fallback={<span>Loading...</span>}>
+            <FaPlus className="mr-2" />
+            Add Blog
+          </Suspense>
         </button>
         <button
           onClick={handleLogout}
@@ -223,7 +232,10 @@ const DisplayPage = React.memo(() => {
                     onClick={() => handleEdit(card)}
                     className="flex items-center px-3 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors duration-200"
                   >
-                    <FaPen className="mr-1" /> Edit
+                    <Suspense fallback={<span>Loading...</span>}>
+                      <FaPen className="mr-2" />
+                      Edit
+                    </Suspense>
                   </button>
                   <button
                     onClick={() => {
@@ -232,7 +244,10 @@ const DisplayPage = React.memo(() => {
                     }}
                     className="flex items-center px-3 py-2 bg-red-500 text-white rounded cursor-pointer hover:bg-red-600 transition-colors duration-200"
                   >
-                    <FaTrash className="mr-1" /> Delete
+                    <Suspense fallback={<span>Loading...</span>}>
+                      <FaTrash className="mr-2" />
+                      Delete
+                    </Suspense>
                   </button>
                 </div>
               </div>

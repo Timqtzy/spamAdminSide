@@ -8,7 +8,7 @@ import {
 import DisplayPage from "./pages/DisplayPage.jsx";
 import Login from "./pages/AdminLogin.jsx";
 import "./App.css";
-
+import "react-toastify/dist/ReactToastify.css";
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
