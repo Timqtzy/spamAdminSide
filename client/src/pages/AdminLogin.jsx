@@ -54,7 +54,7 @@ const AdminLogin = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+        <h2 className="sm:text-2xl text-xl font-bold text-white mb-6 text-center">
           Admin Login
         </h2>
         <form onSubmit={handleSubmit}>
