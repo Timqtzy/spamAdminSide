@@ -4,7 +4,8 @@ import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const DisplayPage = () => {
+const DisplayPage = React.memo(() => {
+  const [loadingState, setloadingState] = useState(false);
   const [cards, setCards] = useState([]);
   const [editingCard, setEditingCard] = useState(null);
   const [formData, setFormData] = useState({
@@ -27,10 +28,7 @@ const DisplayPage = () => {
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     toast.success("Logged out successfully!");
-    setTimeout(() => {
-      window.location.reload(false);
-    }, 500); // Delay of 500 milliseconds
-    navigate("/login");
+    window.location.href = "/";
   };
 
   useEffect(() => {
@@ -52,11 +50,12 @@ const DisplayPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    if (files) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    const newValue = files ? files[0] : value;
+
+    setFormData((prev) => {
+      if (prev[name] === newValue) return prev; // Avoid redundant updates
+      return { ...prev, [name]: newValue };
+    });
   };
 
   const resetForm = () => {
@@ -71,6 +70,7 @@ const DisplayPage = () => {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    setloadingState(true);
     const slug = formData.title
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "")
@@ -91,7 +91,7 @@ const DisplayPage = () => {
           ...getAuthHeader(),
         },
       });
-      setCards([...cards, data]);
+      setCards((prevCards) => [...prevCards, data]);
       toast.success("Blog added successfully!");
       setShowAddModal(false);
       resetForm();
@@ -99,6 +99,8 @@ const DisplayPage = () => {
       toast.error(
         error.response?.data?.error || "An error occurred during upload."
       );
+    } finally {
+      setloadingState(false);
     }
   };
 
@@ -110,6 +112,7 @@ const DisplayPage = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setloadingState(true);
     const form = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value) form.append(key, value);
@@ -136,6 +139,8 @@ const DisplayPage = () => {
       toast.error(
         error.response?.data?.error || "An error occurred during update."
       );
+    } finally {
+      setloadingState(false);
     }
   };
 
@@ -171,13 +176,13 @@ const DisplayPage = () => {
       <div className="my-4 flex justify-between">
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center p-4 bg-[#04AA6D] text-white rounded hover:cursor-pointer hover:bg-[#04aa6dbd] transition ease-in-out duration-300"
+          className="flex items-center p-4 bg-[#04AA6D] text-white rounded cursor-pointer hover:bg-[#04aa6dbd] transition-colors duration-200"
         >
           <FaPlus className="mr-2" /> Add Blog
         </button>
         <button
           onClick={handleLogout}
-          className="flex items-center p-4 bg-red-500 text-white rounded hover:cursor-pointer hover:bg-red-600 transition ease-in-out duration-300"
+          className="flex items-center p-4 bg-red-500 text-white rounded cursor-pointer hover:bg-red-600 transition-colors duration-200"
         >
           Logout
         </button>
@@ -190,10 +195,10 @@ const DisplayPage = () => {
           {cards.map((card) => (
             <div
               key={card._id}
-              className="bg-gray-800 p-4 rounded-lg shadow-lg hover:shadow-xl transition ease-in-out duration-300"
+              className="bg-gray-800 p-4 rounded-lg shadow-lg hover:shadow-xl transition-colors duration-200"
             >
               <img
-                src={card.image}
+                src={`${card.image}?q=60&f_auto`}
                 alt={card.title}
                 className="w-full h-40 object-cover rounded-t-md"
                 loading="lazy"
@@ -204,7 +209,7 @@ const DisplayPage = () => {
                 <div className="mt-4 flex justify-between">
                   <button
                     onClick={() => handleEdit(card)}
-                    className="flex items-center px-3 py-2 bg-blue-500 text-white rounded hover:cursor-pointer hover:bg-blue-600 transition ease-in-out duration-300"
+                    className="flex items-center px-3 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors duration-200"
                   >
                     <FaEdit className="mr-1" /> Edit
                   </button>
@@ -213,7 +218,7 @@ const DisplayPage = () => {
                       setShowDeleteDialog(true);
                       setDeleteCardId(card._id);
                     }}
-                    className="flex items-center px-3 py-2 bg-red-500 text-white rounded hover:cursor-pointer hover:bg-red-600 transition ease-in-out duration-300"
+                    className="flex items-center px-3 py-2 bg-red-500 text-white rounded cursor-pointer hover:bg-red-600 transition-colors duration-200"
                   >
                     <FaTrash className="mr-1" /> Delete
                   </button>
@@ -272,14 +277,19 @@ const DisplayPage = () => {
             <div className="flex justify-between">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:cursor-pointer hover:bg-blue-600 transition ease-in-out duration-300"
+                className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors duration-200"
               >
-                Save Changes
+                {" "}
+                {loadingState ? (
+                  <span className="loading loading-dots loading-sm"></span>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="ml-2 px-4 py-2 bg-gray-500 text-white rounded cursor-pointer hover:bg-gray-600 transition ease-in-out duration-300"
+                className="ml-2 px-4 py-2 bg-gray-500 text-white rounded cursor-pointer hover:bg-gray-600 transition-colors duration-200"
               >
                 Cancel
               </button>
@@ -320,6 +330,7 @@ const DisplayPage = () => {
               name="image"
               onChange={handleInputChange}
               className="block w-full bg-gray-700 border border-gray-600 rounded p-2 text-white mb-4"
+              required
             />
             <input
               type="text"
@@ -328,6 +339,7 @@ const DisplayPage = () => {
               value={formData.category}
               onChange={handleInputChange}
               className="block w-full bg-gray-700 border border-gray-600 rounded p-2 text-white mb-4"
+              required
             />
             <input
               type="text"
@@ -336,18 +348,24 @@ const DisplayPage = () => {
               value={formData.readTime}
               onChange={handleInputChange}
               className="block w-full bg-gray-700 border border-gray-600 rounded p-2 text-white mb-4"
+              required
             />
             <div className="flex justify-between">
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:cursor-pointer hover:bg-blue-600 transition ease-in-out duration-300"
+                className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer hover:bg-blue-600 transition-colors duration-200"
+                disabled={loadingState}
               >
-                Add Blog
+                {loadingState ? (
+                  <span className="loading loading-dots loading-sm"></span>
+                ) : (
+                  "Add Blog"
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="ml-2 px-4 py-2 bg-gray-500 text-white rounded cursor-pointer hover:bg-gray-600 transition ease-in-out duration-300"
+                className="ml-2 px-4 py-2 bg-gray-500 text-white rounded cursor-pointer hover:bg-gray-600 transition-colors duration-200"
               >
                 Cancel
               </button>
@@ -370,13 +388,13 @@ const DisplayPage = () => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:cursor-pointer hover:bg-red-600 transition ease-in-out duration-300"
+                className="px-4 py-2 bg-red-500 text-white rounded cursor-pointer hover:bg-red-600 transition-colors duration-200"
               >
                 Delete
               </button>
               <button
                 onClick={() => setShowDeleteDialog(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:cursor-pointer hover:bg-gray-600 transition ease-in-out duration-300"
+                className="px-4 py-2 bg-gray-500 text-white rounded cursor-pointer hover:bg-gray-600 transition-colors duration-200"
               >
                 Cancel
               </button>
@@ -386,6 +404,6 @@ const DisplayPage = () => {
       )}
     </div>
   );
-};
+});
 
 export default DisplayPage;

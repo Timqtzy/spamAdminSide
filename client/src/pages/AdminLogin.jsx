@@ -8,6 +8,8 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const AdminLogin = ({ onLogin }) => {
+  const [loginClick, setLoginClick] = useState(false);
+
   const [credentials, setCredentials] = useState({
     username: "",
     password: "",
@@ -23,6 +25,8 @@ const AdminLogin = ({ onLogin }) => {
   const apiUrl = "https://spam-admin-side-y74w.vercel.app/";
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoginClick(true);
+    <span className="loading loading-spinner loading-sm"></span>;
     try {
       const { data } = await axios.post(`${apiUrl}api/login`, credentials);
 
@@ -46,8 +50,9 @@ const AdminLogin = ({ onLogin }) => {
       } else {
         errorMessage = "An unexpected error occurred.";
       }
-
       toast.error(errorMessage);
+    } finally {
+      setLoginClick(false);
     }
   };
 
@@ -98,8 +103,13 @@ const AdminLogin = ({ onLogin }) => {
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:cursor-pointer hover:bg-blue-600 transition-colors"
+            disabled={loginClick}
           >
-            Login
+            {loginClick ? (
+              <span className="loading loading-dots loading-sm"></span>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
       </div>
